@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THIRUVANANTHAPURAM BUS TRACKER</title>
+    <!--Leaflet.js for Maps-->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+         body{
+           
+    
+           background: url('q.png') center/cover no-repeat fixed;
+           background-color: #f0f8ff; 
+            font-family: 'Noto Sans Malayalam', Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f8ff;
+         }
+
+         /* add malayalam fonts */
+
+         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;700&display=swap');
+        
+         
+         h1 {
+            color: white;
+            text-shadow: 
+                2px 2px 5px rgba(0,0,0,0.8),
+                -2px -2px 5px rgba(0,0,0,0.8);
+            
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: inline-block;
+}
+
+        
+        
+        
+        
+         /*route*/
+         .route-1 {border-left-color: #ff0000; }
+         .route-2 {border-left-color: #0000ff; }
+         .route-3 {border-left-color: #ff00ff; }
+         .route-4 {border-left-color: #ffff00; background-color: #fffff0; }
+         .route-5 {border-left-color: #800080; }
+         .route-6 {border-left-color: #a52a2a; background-color: #f5f5dc; }
+         .route-7 {border-left-color: #008000; }
+         .route-8 {border-left-color: #87ceeb; }
+         .route-9 {border-left-color: #ffa500; }
+         .route-10 {border-left-color: #4b0082; }
+         .route-11 {border-left-color: #ffd700; background-color: #fffacd; }
+         .route-12 {border-left-color: #808000; background-color: #f0f0e0; }
+         .route-13 {border-left-color: #00ffff; }
+        
+         #map{
+            height: 400px;
+            width: 90%;
+            margin: 20px auto;
+            border: 2px solid #006400;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0,100,0,0.3);
+         }
+         #controls{
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+         }
+         #instructions{
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #006400;
+            margin: 20px auto;
+            padding: 15px;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,100,0,0.2);
+         }
+         #instructions h4 {
+             color: #004d00;
+             margin-bottom: 10px;
+             font-size: 1.1em;
+        }
+
+        #instructions ol {
+           padding-left: 20px;
+           text-align: left;
+        }
+
+         #instructions li {
+             margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        #instructions strong {
+           color: #006400;
+        }
+        #instructions em {
+            display: block;
+            margin-top: 5px;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+         input{
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #006400;
+            border-radius: 5px;
+            min-width: 250px;
+            transition: all 0.3s ease;
+         }
+         input:focus{
+            outline: none;
+            border-color: #006400;
+            box-shadow: 0 0 5px rgba(1,100,0,0.3);
+         }
+         button{
+            padding: 12px 15px;
+            font-size: 16px;
+            background-color: #006400;
+            color: white;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+
+         }
+         button:hover{
+            background-color: #004d00;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+         }
+        #results {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            display: block; /* Add this */
+            margin-top: 20px;
+            text-align: left;
+            max-width: 800px;
+        }
+
+        .bus-route {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 5px solid #006400;
+            background-color: #f8f8f8;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s;
+        }
+
+        .bus-route:hover {
+            transform: translateX(5px);
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .route-number {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .route-name {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        /* Overlay for popup */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            #controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            input {
+                width: 100%;
+            }
+            
+            #welcome-popup {
+                width: 90%;
+                padding: 15px;
+            }
+        }
+        @media (max-width: 600px) {
+            #results, #instructions {
+             width: 95%;
+             margin: 10px auto;
+        }
+}
+
+    </style>
+</head>  
+<body>
+    <!-- Welcome Popup -->
+    <div id="overlay"></div>
+    
+    <h1><u>THIRUVANANTHAPURAM CITY BUS TRACKER</u></h1>
+    <div id="map"></div>
+    <div id="instructions">
+        <h3>User-Guide / ഉപയോക്തൃ മാർഗ്ഗദർശിക</h3>
+        <div class="guide-section">
+            <h4>How to use / എങ്ങനെ ഉപയോഗിക്കാം?</h4>
+            <ol>
+                <li><strong>Enter locations / സ്ഥലങ്ങൾ നൽകുക</strong><br>
+                    - Type your <strong>starting point</strong> (e.g., "East Fort") in the <strong>"From"</strong> box.<br>
+                - Type your <strong>destination</strong> (e.g., "Overbridge") in the <strong>"To"</strong> box.<br>
+                <em>ഉദാഹരണം: "From"ൽ <strong>"East Fort"</strong>, "To"യിൽ <strong>"Overbridge"</strong> എന്ന് നൽകുക.</em>
+            </li>
+            <li><strong>Search Buses / ബസുകൾ തിരയുക</strong><br>
+                - Click <strong>"Find buses"</strong> to see direct routes.<br>
+                - <strong>"Show all routes"</strong> lists all circular buses.<br>
+                <em><strong>"Find buses"</strong> ക്ലിക്ക് ചെയ്താൽ നേരിട്ടുള്ള ബസ് റൂട്ടുകൾ കാണാം.</em>
+            </li>
+            <li><strong>Check Results / ഫലങ്ങൾ പരിശോധിക്കുക</strong><br>
+                - Matching buses will appear below the map.<br>
+                - Click any route to see its full stops.<br>
+                <em>ബസ് റൂട്ടുകൾ മാപ്പിന് താഴെ കാണാം.</em>
+                </li>
+
+            </ol>
+        </div>
+    </div>
+    <div id="controls">
+        <input type="text" id="from-input" placeholder="From(eg: East Fort)">
+        <input type="text" id="to-input" placeholder="To(eg: Overbridge)">
+        <button id="search-btn"> Find buses to reach the correct destination</button>
+        <button id="show-all-btn">Show all routes</button>
+
+    </div>
+    
+    <div id="results"></div>
+    <script>
+        
+        // JavaScript Logic with ALL City Circular Routes
+        const busRoutes = [
+            {
+                number: "1C/1A",
+                name: "Red Clockwise/Anti-Clockwise",
+                stops: ["East Fort", "Overbridge", "Thampanoor", "Ayurveda College", "Statue", "Spencer", "VJT", "Kerala University", "Palayam", "Legislature", "PMG", "Vikas Bhavan Depot", "LMS", "Museum", "Kanakakunnu", "Manaveeyam Road", "Police Headquarters", "Vazhuthakkad", "Police Training College", "Mettukada", "Thycaud Hospital", "Fly Over"],
+                schedule: ["Every 10-15 minutes from 6:00 AM to 10:00 PM"]
+            },
+            {
+                number: "2C/2A",
+                name: "Blue Clockwise/Anti-Clockwise",
+                stops: ["East Fort", "Thampanoor", "Ayurveda College", "Uppitamudu Bridge", "Vanchiyur Court", "Pattur", "General Hospital", "Kerala University", "Palayam", "Legislature", "PMG", "LMS", "Museum", "Kanakakunnuu", "Vellayambalam", "Shastamangalam", "Sri Ramakrishna Hospital", "Marutankuzhi", "Kochar Road", "Edapachinji", "Jagati", "Vazhuthakad", "Bakery Junction", "Jacobs Junction", "Cantonment Gate"],
+                schedule: ["Every 15-20 minutes from 6:00 AM to 10:00 PM"]
+            },
+            {
+                number: "3C/3A",
+                name: "Magenta Clockwise/Anti-Clockwise",
+                stops: ["Peroorkada Depot", "Peroorkada", "Ambalamukk", "Kowdiar", "TTC", "Vellayambalam", "Museum", "LMS", "Palayam", "Statue", "Thampanoor", "Aristo", "Model School", "Bakery (Underpass)", "RBI", "Palayam (Stadium)", "Legislature", "PMG", "Plamoodu", "Pattom", "Kesavadasapuram", "Kuravankonam"],
+                schedule: ["Every 20 minutes from 6:00 AM to 9:30 PM"]
+            },
+            {
+                number: "4C/4A",
+                name: "Yellow Clockwise/Anti-Clockwise",
+                stops: ["Peroorkada Depot", "Peroorkada", "Ambalamukku", "Kowdiar", "TTC", "Devaswom Board", "Nanthancode", "Museum", "LMS", "Palayam", "VJT", "Kerala University", "Flyover", "Legislature", "PMG", "Plamoodu", "Pattom", "Potakuzhi", "Medical College", "Ulloor", "Kesavadasapuram", "Paruthipara", "Muttada", "Vayalikada", "Santwana Junction"],
+                schedule: ["Every 20 minutes from 6:00 AM to 9:30 PM"]
+            },
+            {
+                number: "5C/5A",
+                name: "Violet Clockwise/Anti-Clockwise",
+                stops: ["Peroorkada Depot", "Oolampara", "HLL", "Pipinmood", "Edapazhanji", "Cotton Hill School, Vazhuthacaud", "Mettukada", "Thycaud", "Thampanoor", "Ayurveda College", "Statue", "Palayam", "Assembly", "LMS", "Museum", "Vellayambalam", "TTC", "Kowdiar", "Ambalamukku"],
+                schedule: ["Every 20-25 minutes from 6:00 AM to 9:00 PM"]
+            },
+            {
+                number: "6C/6A",
+                name: "Brown Clockwise/Anti-Clockwise",
+                stops: ["East Fort", "Thampanoor", "Chenthitta", "Kannettumukku", "Jagathy", "Edapazhanji", "Sasthamangalam", "Sree Ramakrishna Hospital", "Maruthamkuzhi", "Forest Office (PTP Nagar)", "PTP Nagar", "Vettamukku", "Ilipode", "Valiyavila", "Tirumala", "Vijayamohini Mill", "Poojappura", "Kunchalumoodu", "Karamana", "Killipalam", "Attakkulangara Road"],
+                schedule: ["Every 30 minutes from 6:00 AM to 9:00 PM"]
+            },
+            {
+                number: "7C/7A",
+                name: "Green Clockwise/Anti-Clockwise",
+                stops: ["East Fort", "Transport Bhavan", "Vazhappally", "Fort Hospital", "Uppidamoodu Bridge", "Petta Pallimukku", "Kannammoola", "Kumarapuram", "Medical College", "Muringapalam", "Pottakuzhi", "Theekumoodu", "Anadyil Hospital", "Law College Junction", "Vikas Bhavan Depot", "P. M. G.", "L. M. S.", "Palayam", "Statue", "Ayurveda College"],
+                schedule: ["Every 20 minutes from 6:00 AM to 9:30 PM"]
+            },
+            {
+                number: "8C/8A",
+                name: "Air - Rail Clockwise/Anti-Clockwise",
+                stops: ["East Fort North Bus Stand", "Thampanoor Railway Station", "East Fort South Bus Stand", "Manacaud", "Valiyathura", "Airport (Domestic)", "Airport (International)", "Chakka", "Pettah", "Pattur", "Kerala University"],
+                schedule: ["Every 30 minutes from 5:30 AM to 10:30 PM"]
+            },
+            {
+                number: "9C/9A",
+                name: "Orange Clockwise/Anti-Clockwise",
+                stops: ["East Fort", "Thampanoor", "Secretariat", "Pattor", "Chakai", "Shangumugham", "Airport", "Valiyathura", "Kallumoodu", "Manacaud"],
+                schedule: ["Every 30 minutes from 6:00 AM to 9:00 PM"]
+            },
+            {
+                number: "10C/10A",
+                name: "Indigo Clockwise/Anti-Clockwise",
+                stops: ["Thampanoor", "East Fort South Bus Stand", "Kalipankulam", "Koncharivila Temple", "Bound Road", "Milma", "Thiruvallam", "Ambalathara", "Kamaleswaram", "Manacaud", "East Fort North Bus Stand"],
+                schedule: ["Every 30 minutes from 6:00 AM to 9:00 PM"]
+            },
+            {
+                number: "11C/11A",
+                name: "Gold Clockwise/Anti-Clockwise",
+                stops: ["Thampanoor", "East Fort South Bus Stand", "Manacaud", "Kamaleswaram", "Ambalathara", "Poonthura", "Beemapally", "Valiyathura", "Mukkolakkal", "Manacaud", "East Fort North Bus Stand"],
+                schedule: ["Every 30 minutes from 6:00 AM to 9:00 PM"]
+            },
+            {
+                number: "12C/12A",
+                name: "Olive Clockwise/Anti-Clockwise",
+                stops: ["Thampanoor", "East Fort South Bus Stand", "Eenchakkal", "Vallakadavu", "Ponnara Bridge", "Sulaiman Street", "Domestic Airport", "Airport (International)", "Chakka", "Petta", "Pattur", "Kerala University"],
+                schedule: ["Every 30 minutes from 6:00 AM to 9:00 PM"]
+            },
+            {
+                number: "13C/13A",
+                name: "Cyan Clockwise/Anti-Clockwise",
+                stops: ["Thampanoor", "East Fort South Bus Stand", "Kamaleswaram", "Kallettumukku", "Ambalathara", "Manikkavilakam", "Kallumoodu", "Manacaud", "East Fort North Bus Stand"],
+                schedule: ["Every 30 minutes from 6:00 AM to 9:00 PM"]
+            }
+        ];
+
+        // Function to find buses between two stops
+        function findBuses(from, to) {
+            const matchingBuses = busRoutes.filter(route => {
+                const fromIndex = route.stops.findIndex(stop => 
+                    stop.toLowerCase().includes(from.toLowerCase()));
+                const toIndex = route.stops.findIndex(stop => 
+                    stop.toLowerCase().includes(to.toLowerCase()));
+                
+                return fromIndex !== -1 && toIndex !== -1 && fromIndex < toIndex;
+            });
+            return matchingBuses;
+        }
+
+        // Function to display all routes
+        function displayAllRoutes() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>All City Circular Routes</h2>';
+            
+            busRoutes.forEach(route => {
+                const routeClass = `route-${route.number.substring(0, route.number.indexOf('/'))}`;
+                resultsDiv.innerHTML += `
+                    <div class="bus-route ${routeClass}">
+                        <div class="route-number">Route ${route.number}</div>
+                        <div class="route-name">${route.name}</div>
+                        <p><strong>Stops:</strong> ${route.stops.join(' → ')}</p>
+                        <p><strong>Schedule:</strong> ${route.schedule}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Display results when button is clicked
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const from = document.getElementById('from-input').value;
+            const to = document.getElementById('to-input').value;
+            
+            if (!from || !to) {
+                alert("Please enter both 'From' and 'To' locations");
+                return;
+            }
+            
+            const results = findBuses(from, to);
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>Available Buses:</h2>';
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML += `
+                    <p>No direct buses found. Check <a href="https://www.google.com/maps/dir/${encodeURIComponent(from)},+Trivandrum/${encodeURIComponent(to)},+Trivandrum" 
+                    target="_blank">Google Maps</a> for alternative routes.</p>
+                    <p>Try searching for major landmarks like 'East Fort', 'Thampanoor', or 'PMG'.</p>
+                `;
+            } else {
+                results.forEach(bus => {
+                    const fromIndex = bus.stops.findIndex(stop => 
+                        stop.toLowerCase().includes(from.toLowerCase()));
+                    const toIndex = bus.stops.findIndex(stop => 
+                        stop.toLowerCase().includes(to.toLowerCase()));
+                    const routeClass = `route-${bus.number.substring(0, bus.number.indexOf('/'))}`;
+                    const partialRoute = bus.stops.slice(fromIndex, toIndex + 1);
+                    
+                    resultsDiv.innerHTML += `
+                        <div class="bus-route ${routeClass}">
+                            <div class="route-number">Route ${bus.number}</div>
+                            <div class="route-name">${bus.name}</div>
+                            <p><strong>Route Segment:</strong> ${partialRoute.join(' → ')}</p>
+                            <p><strong>Full Route:</strong> ${bus.stops.join(' → ')}</p>
+                            <p><strong>Schedule:</strong> ${bus.schedule}</p>
+                        </div>
+                    `;
+                });
+            }
+        });
+
+        // Show all routes when button is clicked
+        document.getElementById('show-all-btn').addEventListener('click', displayAllRoutes);
+
+        // Initialize map (centered on Trivandrum)
+        const map = L.map('map').setView([8.5241, 76.9366], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add some major bus stops as markers
+        const majorStops = [
+            {name: "East Fort", coords: [8.4867, 76.9525]},
+            {name: "Thampanoor", coords: [8.4879, 76.9528]},
+            {name: "PMG", coords: [8.5069, 76.9566]},
+            {name: "Palayam", coords: [8.5008, 76.9608]},
+            {name: "Kazhakootam", coords: [8.5472, 76.8694]},
+            {name: "Peroorkada", coords: [8.5172, 76.9636]}
+        ];
+
+        majorStops.forEach(stop => {
+            L.marker(stop.coords)
+                .addTo(map)
+                .bindPopup(`<b>${stop.name}</b><br>Major Bus Stop`);
+        });
+
+        // Display all routes by default
+        displayAllRoutes();
+
+    </script>
+</body>  
+</html>
